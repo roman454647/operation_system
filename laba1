@@ -1,22 +1,156 @@
+from __future__ import division
+import tqdm
+
+from time import sleep
+import time
+import psutil, os
+import multiprocessing
 from multiprocessing import Pool
-from decimal import  Decimal,localcontext
-def func(x,step):
-    result =Decimal(1)
-    for i in range(1,step):
-        znam=Decimal(1)
-        chysel =Decimal(1)
-        for j in range(1,i+1):
-            if(j%2==0):
-                znam = znam*Decimal(j)
-            else:
-                chysel =chysel*Decimal(j)
-        if(znam!=0):
-            result=result-(Decimal(x**(i)))*(Decimal(chysel/znam))
+import sys
+from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog,
+        QDialogButtonBox, QFormLayout, QGridLayout, QGroupBox, QHBoxLayout,
+        QLabel, QLineEdit, QMenu, QMenuBar, QPushButton, QSpinBox, QTextEdit,
+        QVBoxLayout,QWidget)
+
+
+def setup(event):
+    global unpaused
+    unpaused = event
+
+def myFunction(k):
+    sleep(0.5)
+    result = 1
+    for i in range(2,k):
+        znam = 1 / 2
+        if (i % 2 == 0):
+            ch = (-i) * (i + 1) * (0.5) ** (i - 1)
+        else:
+            ch = i * (i + 1) * (0.5) ** (i - 1)
+        result = result + ch * znam
+
     return result
 
-step= int(input())
-x = float(input())
+
+class MyApp(object):
+
+    def __init__(self):
+        super(MyApp, self).__init__()
+
+        app = QApplication(sys.argv)
+        self.mainWidget = QWidget()
+        self.mainLayout = QVBoxLayout()
+        self.label = QLabel("select a number of process")
+        self.mainLayout.addWidget(self.label)
+        self.mainWidget.setLayout(self.mainLayout)
+
+        self.groupbox = QGroupBox()
+        self.layout = QVBoxLayout()
+        self.groupbox.setLayout(self.layout)
+
+        self.pauseButton = QPushButton('Pause')
+        self.pauseButton.clicked.connect(self.pauseButtonClicked)
+        self.layout.addWidget(self.pauseButton)
+
+        self.oneButton = QPushButton('1x')
+        self.oneButton.clicked.connect(self.startPool)
+        self.layout.addWidget(self.oneButton)
+        self.layout.addWidget(self.pauseButton)
+
+        self.twoButton = QPushButton('2x')
+        self.twoButton.clicked.connect(self.startPooltwo)
+        self.layout.addWidget(self.twoButton)
+        self.layout.addWidget(self.pauseButton)
+
+        self.fourButton = QPushButton('4x')
+        self.fourButton.clicked.connect(self.startPoolfour)
+        self.layout.addWidget(self.fourButton)
+        self.layout.addWidget(self.pauseButton)
+
+        self.eightButton = QPushButton('8x')
+        self.eightButton.clicked.connect(self.startPooleight)
+        self.layout.addWidget(self.eightButton)
+        self.layout.addWidget(self.pauseButton)
+
+        self.terminateButton = QPushButton('Terminate')
+        self.terminateButton.clicked.connect(self.terminate)
+        self.layout.addWidget(self.terminateButton)
+        self.layout.addWidget(self.pauseButton)
+
+        '''self.processButton = QPushButton('set priotity')
+        self.processButton.clicked.connect(self.set_high_priority)
+        self.layout.addWidget(self.processButton)
+        self.layout.addWidget(self.pauseButton)'''
 
 
-print(func(x,step))
+        self.mainLayout.addWidget(self.groupbox)
+        self.mainWidget.show()
+        sys.exit(app.exec_())
 
+
+    def startPool(self):
+        print("start of 1 process")
+        start_time = time.time()
+        self.event = multiprocessing.Event()
+        with Pool(processes=1) as p:
+            pis = p.map(myFunction, [1000000] * 1)
+        self.event.set()
+        print("end of multiprocessing")
+        print("--- %s seconds ---" % (time.time() - start_time))
+
+    def startPooltwo(self):
+        print("start of  process")
+        start_time = time.time()
+        self.event = multiprocessing.Event()
+        with Pool(processes=2) as p:
+            pis = p.map(myFunction, [1000000] * 2)
+        self.event.set()
+        print("end of 2 process")
+        print("--- %s seconds ---" % (time.time() - start_time))
+
+    def startPoolfour(self):
+        print("start of 4 process")
+        start_time = time.time()
+        self.event = multiprocessing.Event()
+        with Pool(processes=4) as p:
+            pis = p.map(myFunction, [1000000] * 4)
+        self.event.set()
+        '''print("end of 4 process")
+        print("--- %s seconds ---" % (time.time() - start_time))'''
+
+    def startPooleight(self):
+        print("start of 8 process")
+        start_time = time.time()
+        self.event = multiprocessing.Event()
+        with Pool(processes=8) as p:
+            pis = p.map(myFunction, [1000000] * 8)
+        self.event.set()
+        print("end of 8 process")
+        print("--- %s seconds ---" % (time.time() - start_time))
+
+
+    def pauseJob(self):
+        self.event.clear()
+
+    def continueJob(self):
+        self.event.set()
+
+    def pauseButtonClicked(self):
+        if self.pauseButton.text()=='Pause':
+            print ('\n\t\t ...pausing job...','\n')
+            self.pauseButton.setText('Resume')
+            self.pauseJob()
+        else:
+            print ('\n\t\t ...resuming job...','\n')
+            self.pauseButton.setText('Pause')
+            self.continueJob()
+
+    def terminate(self):
+        self.process.terminate()
+
+    '''def set_high_priority(self):
+        p = psutil.Process(os.getpid())
+        p.set_nice(psutil.HIGH_PRIORITY_CLASS)'''
+
+
+if __name__ == '__main__':
+         MyApp()
