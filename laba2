@@ -1,27 +1,30 @@
+import time
 import random
 import os
 from multiprocessing import Pool
 
 
-'''def min(xy):
-    t = 0
-    for i in range(len(xy)):
-        if xy[i] < xy[t]:
-            t = i'''
 
 import multiprocessing.dummy as mp
 m=100000000
-def do_print(s):
+def do_min(s):
     global m
     if (s<m):
         m=s
 
 
+
 if __name__=="__main__":
-    n = random.sample(range(100000),10000)
+    print("enter the number of threads")
+    k =int(input())
+    n = random.sample(range(100000),100)
     print(n)
-    p=mp.Pool(4)
-    p.map(do_print,n)# range(0,1000) if you want to replicate your example
+    start_time = time.time()
+    p=mp.Pool(k)
+    p.map(do_min,n)# range(0,1000) if you want to replicate your example
     p.close()
     p.join()
     print(m)
+    print("--- %s seconds ---" % (time.time() - start_time))
+
+    
